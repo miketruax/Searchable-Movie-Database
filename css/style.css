@@ -100,6 +100,10 @@ button {
 
 /* MOVIE LIST COMPONENTS -------- */
 
+.instructions{
+  text-align: center;
+  margin: auto;
+}
 .no-movies  {
   color: #b0b0b0;
   height: 140px;
@@ -123,6 +127,10 @@ button {
   line-height: 1.2;
   color: #000;
   font-weight: 500;
+  cursor: pointer;
+}
+.movie-title:hover {
+  color:#3385ff;
 }
 
 .movie-year {
@@ -146,6 +154,62 @@ button {
   bottom: 0;
   left: 0;
   margin: auto;
+}
+
+/* =================================
+  Expanded Info Styles
+==================================== */
+#expandedInfo{
+  display: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.back{
+  width:auto;
+  color: #c2c4c6;
+  margin-left: 2%;
+  cursor: pointer;
+}
+.back:hover{
+  color: white;
+}
+.top-grey{
+  background: rgb(76,76,76);
+  width: 100%;
+  margin:0;
+  height: 7rem;
+  margin-top: -35px;
+}
+#more-title{
+  color: white;
+  margin-left: 35%;
+  font-size: 1.6rem;
+  text-align: left;
+  font-weight: 500;
+}
+
+#more-poster{
+  z-index: 4;
+  margin: 1%;
+  padding: 1%;
+  margin-top: -40px;
+  max-width: 25%;
+  background: #fff;
+  float: left;
+}
+.more-synopsis {
+  width: 67%;
+  margin-right: 2%;
+  float: right;
+}
+.imdb-button{
+  background: rgb(55,214,178);
+  color: white;
+  width: 120px;
+  padding: 2px;
+  margin-top: 4px;
+  cursor: pointer;
 }
 
 /* =================================
@@ -200,6 +264,13 @@ button {
   }
 }
 
+@media (max-width: 770px){
+  .top-grey{
+    margin-top: -20px;
+  }
+}
+
+
 @media (min-width: 550px) {
   .movie-list li {
     float: left;
@@ -224,7 +295,7 @@ button {
     transition: transform .4s ease-out;
   }
 
-  .poster-wrap:hover .movie-poster {
+  .poster-wrap:hover .movie-poster{
     -webkit-transform: scale(1.1);
     transform: scale(1.1);
   }

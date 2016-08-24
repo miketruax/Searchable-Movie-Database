@@ -224,6 +224,9 @@ select{
   color: #c2c4c6;
   margin-left: 2%;
   cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  z-index:auto;
 }
 .back:hover{
   color: white;
@@ -232,6 +235,7 @@ select{
   background: rgb(76,76,76);
   width: 100%;
   margin:0;
+  z-index: -2;
   height: 7rem;
   margin-top: -35px;
 }
@@ -249,7 +253,7 @@ select{
 }
 
 .more-poster{
-  z-index: 4;
+  z-index: -1;
   margin: 1%;
   padding: 1%;
   margin-top: -40px;

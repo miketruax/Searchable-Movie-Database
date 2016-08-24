@@ -273,9 +273,15 @@ select{
   width: 170px;
   height: 50px;
   border-radius: 5px;
+  border: solid rgb(55,214,178) 2px;
   padding: 6px;
   margin-top: 4px;
   cursor: pointer;
+}
+
+.imdb-button:hover{
+  color: rgb(55,214,178);
+  background: white;
 }
 
 .more-placeholder{

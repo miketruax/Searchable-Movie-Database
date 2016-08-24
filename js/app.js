@@ -11,6 +11,7 @@ var pullMovies = function(page){
   $('#movies').html('<div class="centered">LOADING...<br><img src="./css/bar.gif"></div>');
   var queryData = {s: $('#search').val(),
                    y: $('#year').val(),
+                   type: "movie", //this is a movie search afer all, not TV search
                    r: 'JSON', page: page}; //info to be passed to API
 
     $.getJSON('http://www.omdbapi.com/', queryData, function(data){ //calls for JSON data

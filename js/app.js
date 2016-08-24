@@ -74,6 +74,7 @@ var pullMovies = function(page){
   };
 
   var collectMoreInfo = function(id){ //passes id of item clicked
+    $('#expandedInfo').html('<div class="centered">LOADING...<br><img src="./css/bar.gif"></div>');
     var queryData = {i: id, plot:'full', r: 'json'}; //sets search param for more info
     $.getJSON('http://www.omdbapi.com/', queryData, function(data){ //calls direct imdb id search
       if(data.Response=="True"){ //if response is valid JSON movie info, show contanier and populate info
@@ -87,43 +88,60 @@ var pullMovies = function(page){
     });
   };
 
-var populateMoreInfo = function(movie){ //builds more info one block at a time
+  var populateMoreInfo = function(movie){ //builds more info one block at a time
     var populateHTML = '<div class="top-grey"><button class="back">  &#10094; Search results'; //back button
     populateHTML += '</button><br><span class="more-title">'+movie.Title+' ('+movie.Year+')</span><br>'; //title and year
     populateHTML += '<span class="more-title more-rating">IMDB Rating: '+movie.imdbRating+'</span></div>'; //imdb rating
     populateHTML += getPoster(movie.Poster, 'more-poster')+'<div class ="more-synopsis">'; //poster
     populateHTML += '<h3>Plot Synopsis:</h3><p class="synopsis">'+movie.Plot+'</p>'; //plot
     populateHTML +='<a class="imdb-button" href="http://www.imdb.com/title/'+movie.imdbID; // link to imdb button
-    populateHTML += '">View on IMDB</a></div>'; //closing it all out
-  $('#expandedInfo').html(populateHTML); //adding it to container div
-};
+    populateHTML += '" target="_blank">View on IMDB</a></div>'; //closing it all out
+    $('#expandedInfo').html(populateHTML); //adding it to container div
+  };
+
+
   var createPagination = function(responseNumber, page){   //this is the function that creates the pagination buttons on the bottom
     var buttonCount = Math.ceil(responseNumber/10); // 10 per page then rounds up so 84->9pages 24->3 pages etx
+    page = parseInt(page);
     $('#pagination-div').html('');
-    if(buttonCount!==1){ //if only one button no need to paginate
+    if(buttonCount!==1){ //if only one button no need to add paginate links
       var html = '<div class="pagination"><ol>'; //sets-up starting tags
-      if(parseInt(page)!==1){ //if not on the first page adds jump to first page
+      if(page!==1){ //if not on the first page adds jump to first page
         html+='<li><a class="first jumper" href="#">&#8606;first</a></li>';
       }
       //the number passed is how many pages there should be and therefore how many links there should be
-      for(var i=(parseInt(page)-9); i <= (parseInt(page)+9); i++){
+      for(var i=(page-9); i <= (page+9); i++){
         if(i>0 && i<=buttonCount){
           html += '<li><a class="pag-button" href="#" id="'+i+'">'+i+'</a></li>'; //builds each button one at a time
         }
       }
 
-      if(parseInt(page) !== buttonCount){ //if not on the last page, adds jump to last page
+      if(page !== buttonCount){ //if not on the last page, adds jump to last page
           html+='<li><a class="last" href="#">last &#8608;</a></li>';
       }
 
       html +='</ol></div>'; //closes tags
       $('#pagination-div').html(html); //adds pagination to the appropriate div
+      addJumpTo(buttonCount, page);
       $('#'+page).addClass('active'); // if more than one, the page passed in becomes active button
+      $('select[name="pagejump"]').val(page);
+      $('.first').on('click',function(){ pullMovies(1);}); //adds click event for first button
+      $('.last').on('click',function(){ pullMovies(buttonCount);});
     }
-        $('.first').on('click',function(){ pullMovies(1);}); //adds click event for first button
-        $('.last').on('click',function(){ pullMovies(buttonCount);});
+  };
+  var addJumpTo = function(numOptions, currentOption){
+    var select='<div class="select">Jump to page: <select name="pagejump">';
+    for(var i=1; i<=parseInt(numOptions); i++){
+      select+='<option value="'+i+'">'+i+'</option>';
+    }
+    select+= '</select><a id="jump-to" href="#">Go!</a></div>';
+    $('#pagination-div').append(select);
+    $('#jump-to').on('click', function(){
+      pullMovies($('select[name="pagejump"]').val())
+    });
+  }
 
-    };
+
   var hideMoreInfo = function(){ //when back button is clicked or new search on more info page
     $('#movies').show(); //shows #movies results
     $('#expandedInfo').hide(); //hides expandedInfo

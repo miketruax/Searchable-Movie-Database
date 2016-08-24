@@ -56,6 +56,12 @@ button {
   z-index: 2000;
 }
 
+select{
+  padding: 3px 3px;
+  margin: 2px;
+}
+
+
 /* =================================
   Page Components
 ==================================== */
@@ -180,7 +186,7 @@ button {
   display: inline;
 }
 
-.pagination li a{
+.pagination li a, #jump-to{
   border: 1px solid #eaeaea;
   border-radius: 5px;
   padding: 3px 8px;
@@ -189,11 +195,20 @@ button {
 }
 
 .pagination li a.active,
-.pagination li a:hover{
+.pagination li a:hover,
+#jump-to:hover{
   background-color: rgb(76,76,76);
   color: #fff;
 }
+.select{
+  text-align: center;
+  width: 30%;
+  margin:auto;
+}
 
+#jump-to{
+  margin-left: 7px;
+}
 
 /* =================================
   Expanded Info Styles

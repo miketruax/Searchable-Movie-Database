@@ -1,27 +1,32 @@
 !(function(){ //self executing anonymous functions are our friends
   "use strict";
-  $(document).ready(function(){
     $('#submit').click(function(e){ //sets up even
       e.preventDefault(); //keeps form submission and reload from happening
-      var queryData = {s: $('#search').val(), y: $('#year').val(), r: 'JSON'}; //info to be passed to API
-      $.getJSON('http://www.omdbapi.com/', queryData, function(data){ //calls for JSON data
-        console.log(data);
-        if(data.Response === "True"){ //if successful and movies are found
-          populateMovies(data); //populates the movies
-        }
-        else if (data.Error ==="Movie not found!"){ //sets error if no movie found
-          var noMovies = ' No movies found that match: ' + $('#search').val();
-          if($('#year').val()){ noMovies += ' in the year: '+$('#year').val();}
-          populateError(noMovies, $('#movies'));
-        }
-        else { //in case of other error with JSONP call
-          var otherError = 'An unknown error occured.<br> Ensure your search contains';
-          otherError += ' at least two characters and please try again shortly.';
-          populateError(otherError, $('#movies'));
-        }
-      });
+      pullMovies(1); //pulls movies passing 1 for just the first page
+      hideMoreInfo();
     });
-  });
+
+var pullMovies = function(page){
+  $('#movies').html('<div class="centered">LOADING...<br><img src="./css/bar.gif"></div>');
+  var queryData = {s: $('#search').val(), y: $('#year').val(), r: 'JSON', page: page}; //info to be passed to API
+    $.getJSON('http://www.omdbapi.com/', queryData, function(data){ //calls for JSON data
+      if(data.Response === "True"){ //if successful and movies are found
+        populateMovies(data); //populates the movies
+        createPagination(data.totalResults, page);//adds pagination to the bottom of the page
+      }
+      else if (data.Error ==="Movie not found!"){ //sets error if no movie found
+        var noMovies = ' No movies found that match: ' + $('#search').val();
+        if($('#year').val()){ noMovies += ' in the year: '+$('#year').val();}
+        populateError(noMovies, $('#movies')); //sets error to #movies
+      }
+      else { //in case of other error with JSONP call
+        var otherError = 'An unknown error occured.<br> Ensure your search contains';
+        otherError += ' at least two characters and please try again shortly.';
+        populateError(otherError, $('#movies'));
+      }
+    });
+};
+
 
     var populateError = function(errorMessage, insertInto){ //creates error li element
       var $i = "<i class='material-icons icon-help'>help_outline</i>";
@@ -32,113 +37,103 @@
     };
 
     var populateMovies = function(movieList){
-      $('#movies').html('');
-      $.each(movieList.Search, function(key, movie){
+      $('#movies').html(''); //resets #movies to ensure nothing was lingering
 
+      //cycles through each movie updating information to the li item
+      $.each(movieList.Search, function(key, movie){
         var li ='<li><div class="poster-wrap">';
         li += '<a href="http://www.imdb.com/title/'+movie.imdbID;
-        li += '" target="blank">'+getPoster(movie.Poster)+'</a></div>';
+        li += '" target="blank">'+getPoster(movie.Poster, 'movie-poster')+'</a></div>';
         li += '<span class="movie-title" id="'+movie.imdbID+'">'+movie.Title+'</span>';
         li += '<span class="movie-year">'+movie.Year+'</span>' +'</li>';
-        $('#movies').append(li);
+        $('#movies').append(li); //adds one li at a time as they are built
       });
     };
-  var getPoster = function(posterLink){
+
+  var getPoster = function(posterLink, posterClass){ //sends poster link from movie object
     if(posterLink ==="N/A"){ //if no poster, sets default img
-      return '<i class="material-icons poster-placeholder">crop_original</i>';
+      if(posterClass ==='more-poster'){ //fixes styling issue on more info page
+        return '<i class="material-icons more-placeholder">crop_original</i>';
+      }
+
+      else{
+        return '<i class="material-icons poster-placeholder">crop_original</i>';
+      }
     }
+
     else {
-      return '<img class="movie-poster" src="'+posterLink+'">';
+      return '<img class="'+posterClass+'" src="'+posterLink+'">'; //returns link
     }
   };
 
-  var showMore = function(){
-    $('#movies').hide('fast');
+  var showMore = function(){ //title is clicked hides search results and shows more info
+    $('#movies').hide();
+    $('#pagination-div').hide();
     $('#expandedInfo').show('slow');
-    console.log($(this).attr('id'))
-    collectMoreInfo($(this).attr('id'));
+    collectMoreInfo($(this).attr('id')); //recalls OMDBapi to get specifics on movie clicked
   };
 
-  var collectMoreInfo = function(id){
+  var collectMoreInfo = function(id){ //passes id of item clicked
     var queryData = {i: id, plot:'full', r: 'json'}; //sets search param for more info
-    $.getJSON('http://www.omdbapi.com/', queryData, function(data){
+    $.getJSON('http://www.omdbapi.com/', queryData, function(data){ //calls direct imdb id search
       if(data.Response=="True"){ //if response is valid JSON movie info, show contanier and populate info
-        $('#more-container').show();
-        console.log(data);
-        populateMoreInfo(data);
-      } else{
+        populateMoreInfo(data); //populates the data
+      }
+      else{ //in case an error occurs retreiving the information
         var error = 'Could not find information. Please try again later.';
         error += ' We apologize for any inconvenience.';
-        populateError(error, $('#expandedInfo'));
+        populateError(error, $('#expandedInfo')); //populates error to expandedInfo id
       }
     });
   };
 
-var populateMoreInfo = function(movie){
-  var populateHTML = '<div class="top-grey"><button class="back">  &#10094; Search results';
-  populateHTML += '</button><br><span class="more-title">'+movie.Title+' ('+movie.Year+')</span><br>';
-  populateHTML += '<span class="more-title more-rating">IMDB Rating: '+movie.imdbRating+'</span></div>';
-  populateHTML +='<img class="more-poster" src="'+movie.Poster+'"><div class ="more-synopsis">';
-  populateHTML += '<h3>Plot Synopsis:</h3><p class="synopsis">'+movie.Plot+'</p>';
-  populateHTML +='<a class="imdb-button" href="http://www.imdb.com/title/'+movie.imdbID;
-  populateHTML += '">View on IMDB</a></div>';
-  $('#expandedInfo').html(populateHTML);
+var populateMoreInfo = function(movie){ //builds more info one block at a time
+    var populateHTML = '<div class="top-grey"><button class="back">  &#10094; Search results'; //back button
+    populateHTML += '</button><br><span class="more-title">'+movie.Title+' ('+movie.Year+')</span><br>'; //title and year
+    populateHTML += '<span class="more-title more-rating">IMDB Rating: '+movie.imdbRating+'</span></div>'; //imdb rating
+    populateHTML += getPoster(movie.Poster, 'more-poster')+'<div class ="more-synopsis">'; //poster
+    populateHTML += '<h3>Plot Synopsis:</h3><p class="synopsis">'+movie.Plot+'</p>'; //plot
+    populateHTML +='<a class="imdb-button" href="http://www.imdb.com/title/'+movie.imdbID; // link to imdb button
+    populateHTML += '">View on IMDB</a></div>'; //closing it all out
+  $('#expandedInfo').html(populateHTML); //adding it to container div
 };
+  var createPagination = function(responseNumber, page){   //this is the function that creates the pagination buttons on the bottom
+    var buttonCount = Math.ceil(responseNumber/10); // 10 per page then rounds up so 84->9pages 24->3 pages etx
+    $('#pagination-div').html('');
+    if(buttonCount!==1){ //if only one button no need to paginate
+      var html = '<div class="pagination"><ol>'; //sets-up starting tags
+      if(parseInt(page)!==1){ //if not on the first page adds jump to first page
+        html+='<li><a class="first jumper" href="#">&#8606;first</a></li>';
+      }
+      //the number passed is how many pages there should be and therefore how many links there should be
+      for(var i=(parseInt(page)-9); i <= (parseInt(page)+9); i++){
+        if(i>0 && i<=buttonCount){
+          html += '<li><a class="pag-button" href="#" id="'+i+'">'+i+'</a></li>'; //builds each button one at a time
+        }
+      }
 
-  //adds event listener to current and all added .movie-title(s)
-  $('body').on('click', '.movie-title', showMore);
-  $('body').on('click', '.back', function(){ //reshows search results from more info page
-    $('#movies').show('slow');
-    $('#expandedInfo').hide('fast');
-    $('#more-container').hide(); //hides the contaning DIV on more info page
-  });
-  var tester = function(){
-    console.log('global working');
+      if(parseInt(page) !== buttonCount){ //if not on the last page, adds jump to last page
+          html+='<li><a class="last" href="#">last &#8608;</a></li>';
+      }
+
+      html +='</ol></div>'; //closes tags
+      $('#pagination-div').html(html); //adds pagination to the appropriate div
+      $('#'+page).addClass('active'); // if more than one, the page passed in becomes active button
+    }
+        $('.first').on('click',function(){ pullMovies(1);}); //adds click event for first button
+        $('.last').on('click',function(){ pullMovies(buttonCount);});
+
+    };
+  var hideMoreInfo = function(){ //when back button is clicked or new search on more info page
+    $('#movies').show(); //shows #movies results
+    $('#expandedInfo').hide(); //hides expandedInfo
+    $('#pagination-div').show(); //shows pagination div again
   };
 
-
-  var createPagination = function(responseNumber){   //this is the function that creates the pagination buttons on the bottom
-    responseNumber = Math.ceil(responseNumber.length/10); // 10 per page then rounds up so 84->9pages 24->3 pages etx
-    resetPaginationLinks(); //clears old buttons
-    var outerDiv = document.createElement('div'); //starts with outer div
-    var ol = document.createElement('ol'); //builds inner ol
-    outerDiv.classList.add('pagination');
-    outerDiv.appendChild(ol);
-    for(var i=1; i<=buttonCount; i++){ //the number passed is how many pages there should be and therefore how many links there should be
-      var list = document.createElement('li');
-      var a = document.createElement('a');
-      a.href = '#';
-      a.id= i; //easier to grab the buttons for active class (could be done with document.getElementsByClassName('pagination').etc.. but this is muuuuch easier)
-      a.innerHTML = i;
-      list.appendChild(a);
-      ol.appendChild(list);
-      $(a).on('click', clickPagination); //adds the event listener here at creation for simplicity's sake
-      $('.pagination-div')[0].appendChild(outerDiv); // adds them to the main page
-      if(buttonCount===1){$(a).hide();} //hides button if only one present
-  }
-};
-
-var clickPagination = function(number){ //on click filters to correct page
-  for(var i = 0; i <allMovies.length; i++){ //cycles through all students and reHides
-      $(allMovies[i]).hide();
-    }
-  $('#'+active).toggleClass('active'); //removes class from only the currently active item. using id avoids having to loop through all of them
-  active = this.id; //sets active to clicked button
-  $('#'+active).toggleClass('active'); //sets active to current page button
-  for(var k = 0; k <10; k++){ //cycles through 10 items for the current page
-    var currentItem = allMovies[k+10*(active-1)];//simple math to know which indeces to pull i.e. button 3 clicked which makes active =3 so it should be 21-30 with [i+10*(3-1)] = i+10*2 = i(0-9)+20 for the correct index
-    if(currentItem){
-      $(currentItem).stop().fadeIn(800); //fixes animation queue to keep things from populating if you're typing too fast
-    }
-  }
-};
-
-var resetPaginationLinks = function(){ //resets the pagionation links
-  var pagination = $('.pagination')[0];
-  if (pagination){ //this is to ensure there are no console errors if someone KEEPS typing in search even after the pagination links are removed as there won't be pagination links to remove
-    $(pagination).remove();
-  }
-};
-
+$('body').on('click','.movie-title', showMore); //any movie title clicked goes to more info
+$('body').on('click','.back', hideMoreInfo);
+$('body').on('click','.pag-button', function(){
+  pullMovies($(this).attr('id')); //pulls movies on the page that the pagination was clicked
+});
 
 })();

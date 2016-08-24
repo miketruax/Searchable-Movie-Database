@@ -1,5 +1,6 @@
 !(function(){ //self executing anonymous functions are our friends
   "use strict";
+  $('#movies').html('');
     $('#submit').click(function(e){ //sets up even
       e.preventDefault(); //keeps form submission and reload from happening
       pullMovies(1); //pulls movies passing 1 for just the first page
@@ -8,7 +9,10 @@
 
 var pullMovies = function(page){
   $('#movies').html('<div class="centered">LOADING...<br><img src="./css/bar.gif"></div>');
-  var queryData = {s: $('#search').val(), y: $('#year').val(), r: 'JSON', page: page}; //info to be passed to API
+  var queryData = {s: $('#search').val(),
+                   y: $('#year').val(),
+                   r: 'JSON', page: page}; //info to be passed to API
+
     $.getJSON('http://www.omdbapi.com/', queryData, function(data){ //calls for JSON data
       if(data.Response === "True"){ //if successful and movies are found
         populateMovies(data); //populates the movies
@@ -29,10 +33,9 @@ var pullMovies = function(page){
 
 
     var populateError = function(errorMessage, insertInto){ //creates error li element
-      var $i = "<i class='material-icons icon-help'>help_outline</i>";
-      var li = document.createElement('li');
-      $(li).addClass('no-movies');
-      $(li).html($i + errorMessage); //adds appropriate error message
+      var li = '<li class="no-movies">';
+      li+= '<i class="material-icons icon-help">help_outline</i>';
+      li += errorMessage+'</li>';
       $(insertInto).html(li); //adds li to the #movies element
     };
 
@@ -42,8 +45,8 @@ var pullMovies = function(page){
       //cycles through each movie updating information to the li item
       $.each(movieList.Search, function(key, movie){
         var li ='<li><div class="poster-wrap">';
-        li += '<a href="http://www.imdb.com/title/'+movie.imdbID;
-        li += '" target="blank">'+getPoster(movie.Poster, 'movie-poster')+'</a></div>';
+        li += '<a href="http://www.imdb.com/title/'+movie.imdbID+'" target="blank">';
+        li += getPoster(movie.Poster, 'movie-poster')+'</a></div>';
         li += '<span class="movie-title" id="'+movie.imdbID+'">'+movie.Title+'</span>';
         li += '<span class="movie-year">'+movie.Year+'</span>' +'</li>';
         $('#movies').append(li); //adds one li at a time as they are built
@@ -89,46 +92,57 @@ var pullMovies = function(page){
   };
 
   var populateMoreInfo = function(movie){ //builds more info one block at a time
-    var populateHTML = '<div class="top-grey"><button class="back">  &#10094; Search results'; //back button
-    populateHTML += '</button><br><span class="more-title">'+movie.Title+' ('+movie.Year+')</span><br>'; //title and year
-    populateHTML += '<span class="more-title more-rating">IMDB Rating: '+movie.imdbRating+'</span></div>'; //imdb rating
-    populateHTML += getPoster(movie.Poster, 'more-poster')+'<div class ="more-synopsis">'; //poster
-    populateHTML += '<h3>Plot Synopsis:</h3><p class="synopsis">'+movie.Plot+'</p>'; //plot
-    populateHTML +='<a class="imdb-button" href="http://www.imdb.com/title/'+movie.imdbID; // link to imdb button
-    populateHTML += '" target="_blank">View on IMDB</a></div>'; //closing it all out
-    $('#expandedInfo').html(populateHTML); //adding it to container div
+    var moreHTML = '<div class="top-grey">';
+    moreHTML+='<button class="back">  &#10094; Search results</button><br>'; //back button
+    moreHTML += '<span class="more-title">'+movie.Title+' ('+movie.Year+')</span><br>'; //title and year
+    moreHTML += '<span class="more-title more-rating">IMDB Rating: '+movie.imdbRating+'</span></div>'; //imdb rating
+    moreHTML += getPoster(movie.Poster, 'more-poster')+'<div class ="more-synopsis">'; //poster
+    moreHTML += '<h3>Plot Synopsis:</h3><p class="synopsis">'+movie.Plot+'</p>'; //plot
+    moreHTML +='<a class="imdb-button" href="http://www.imdb.com/title/'+movie.imdbID; // link to imdb button
+    moreHTML += '" target="_blank">View on IMDB</a></div>'; //closing it all out
+    $('#expandedInfo').html(moreHTML); //adding it to container div
   };
 
 
   var createPagination = function(responseNumber, page){   //this is the function that creates the pagination buttons on the bottom
-    var buttonCount = Math.ceil(responseNumber/10); // 10 per page then rounds up so 84->9pages 24->3 pages etx
-    page = parseInt(page);
-    $('#pagination-div').html('');
-    if(buttonCount!==1){ //if only one button no need to add paginate links
-      var html = '<div class="pagination"><ol>'; //sets-up starting tags
-      if(page!==1){ //if not on the first page adds jump to first page
-        html+='<li><a class="first jumper" href="#">&#8606;first</a></li>';
-      }
+    var numButtons = Math.ceil(responseNumber/10); // 10 per page then rounds up so 84->9pages 24->3 pages etx
+    page = parseInt(page); //occasionally page decided it was meant to be a string, causing issues
+    $('#pagination-div').html(''); //clears old pagination
+    if(numButtons!==1){ //if only one button no need to add paginate links
+      var html = '<div class="pagination"><ol id="buttons">'; //sets-up starting tags
       //the number passed is how many pages there should be and therefore how many links there should be
-      for(var i=(page-9); i <= (page+9); i++){
-        if(i>0 && i<=buttonCount){
+      for(var i=(page-5); i <= (page+5); i++){
+        if(i>0 && i<=numButtons){
           html += '<li><a class="pag-button" href="#" id="'+i+'">'+i+'</a></li>'; //builds each button one at a time
         }
       }
-
-      if(page !== buttonCount){ //if not on the last page, adds jump to last page
-          html+='<li><a class="last" href="#">last &#8608;</a></li>';
-      }
-
       html +='</ol></div>'; //closes tags
       $('#pagination-div').html(html); //adds pagination to the appropriate div
-      addJumpTo(buttonCount, page);
+      addJumpTo(numButtons, page);
       $('#'+page).addClass('active'); // if more than one, the page passed in becomes active button
       $('select[name="pagejump"]').val(page);
-      $('.first').on('click',function(){ pullMovies(1);}); //adds click event for first button
-      $('.last').on('click',function(){ pullMovies(buttonCount);});
+      createFirstLast(page, numButtons);
     }
   };
+
+  var createFirstLast = function(current, max){
+    if(current !== 1){ //if not on the last page, adds jump to last page
+        var first ='<li><a class="first jumper" href="#">&#8606;first</a></li>';
+        $('#buttons').prepend(first);
+        $('.first').on('click', function(){
+          pullMovies(1);
+        });
+    }
+
+    if(current !== max){ //if not on the last page, adds jump to last page
+        var last ='<li><a class="last" href="#">last &#8608;</a></li>';
+        $('#buttons').append(last);
+        $('.last').on('click', function(){
+          pullMovies(max);
+        });
+    }
+  };
+
   var addJumpTo = function(numOptions, currentOption){
     var select='<div class="select">Jump to page: <select name="pagejump">';
     for(var i=1; i<=parseInt(numOptions); i++){
@@ -137,9 +151,9 @@ var pullMovies = function(page){
     select+= '</select><a id="jump-to" href="#">Go!</a></div>';
     $('#pagination-div').append(select);
     $('#jump-to').on('click', function(){
-      pullMovies($('select[name="pagejump"]').val())
+      pullMovies($('select[name="pagejump"]').val());
     });
-  }
+  };
 
 
   var hideMoreInfo = function(){ //when back button is clicked or new search on more info page
@@ -150,6 +164,7 @@ var pullMovies = function(page){
 
 $('body').on('click','.movie-title', showMore); //any movie title clicked goes to more info
 $('body').on('click','.back', hideMoreInfo);
+
 $('body').on('click','.pag-button', function(){
   pullMovies($(this).attr('id')); //pulls movies on the page that the pagination was clicked
 });

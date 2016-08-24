@@ -415,7 +415,9 @@ select{
   .movie-list li {
     width: 25%;
   }
-
+  .movie-list li:nth-of-type(9n) {
+    margin-left: 25%;
+  }
   .movie-list li:nth-of-type(4n+1) {
     clear: left;
   }

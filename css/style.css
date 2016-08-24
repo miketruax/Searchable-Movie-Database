@@ -157,6 +157,33 @@ button {
 }
 
 /* =================================
+  Pagination styling
+==================================== */
+.pagination{
+  margin: 40px 0 0 0;
+  text-align: center;
+}
+
+.pagination li{
+  display: inline;
+}
+
+.pagination li a{
+  border: 1px solid #eaeaea;
+  border-radius: 5px;
+  padding: 3px 8px;
+  text-decoration: none;
+  color: #4ba6c3;
+}
+
+.pagination li a.active,
+.pagination li a:hover{
+  background-color: #4ba6c3;
+  color: #fff;
+}
+
+
+/* =================================
   Expanded Info Styles
 ==================================== */
 #expandedInfo{
@@ -181,15 +208,20 @@ button {
   height: 7rem;
   margin-top: -35px;
 }
-#more-title{
+.more-title{
   color: white;
   margin-left: 35%;
   font-size: 1.6rem;
   text-align: left;
   font-weight: 500;
 }
+.more-rating{
+  font-size: 1rem;
+  color: white;
+  margin-left: 35%;
+}
 
-#more-poster{
+.more-poster{
   z-index: 4;
   margin: 1%;
   padding: 1%;
@@ -203,14 +235,18 @@ button {
   margin-right: 2%;
   float: right;
 }
+
 .imdb-button{
   background: rgb(55,214,178);
   color: white;
-  width: 120px;
-  padding: 2px;
+  width: 170px;
+  height: 50px;
+  border-radius: 5px;
+  padding: 6px;
   margin-top: 4px;
   cursor: pointer;
 }
+
 
 /* =================================
   Layout Styles

@@ -21,7 +21,7 @@ var pullMovies = function(page){
       }
       else if (data.Error ==="Movie not found!"){ //sets error if no movie found
         var noMovies = ' No movies found that match: ' + $('#search').val();
-        if($('#year').val()){ noMovies += ' in the year: '+$('#year').val();}
+        if($('#year').val()){ noMovies += ' ('+$('#year').val()+')';}
         populateError(noMovies, $('#movies')); //sets error to #movies
       }
       else { //in case of other error with JSONP call
@@ -29,8 +29,10 @@ var pullMovies = function(page){
         otherError += ' at least two characters and please try again shortly.';
         populateError(otherError, $('#movies'));
       }
+    }).fail(function() {
+      populateError('Could not reach the database. Please try again later', $('#movies'));
     });
-};
+  };
 
 
     var populateError = function(errorMessage, insertInto){ //creates error li element
@@ -89,6 +91,8 @@ var pullMovies = function(page){
         error += ' We apologize for any inconvenience.';
         populateError(error, $('#expandedInfo')); //populates error to expandedInfo id
       }
+    }).fail(function() {
+      populateError('Could not reach the database. Please try again later', $('#expandedInfo'));
     });
   };
 
